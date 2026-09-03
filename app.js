@@ -34,10 +34,10 @@
       "status", "copy-offer", "save-indicator", "open-settings", "settings-modal",
       "close-settings", "cancel-settings", "save-settings", "settings-status", "template-list",
       "template-count", "add-template", "duplicate-template", "delete-template", "template-editor",
-      "edit-title", "edit-package", "edit-message", "edit-broadband2", "edit-tv1", "edit-tv2",
+      "edit-title", "edit-package", "edit-message", "edit-broadband2",
       "field-settings", "currency-settings", "default-template", "default-currency", "copy-settings", "reset-settings",
       "open-instructions", "instructions-modal", "close-instructions", "done-instructions", "open-field-values", "services-help",
-      "tv-output-settings", "tv-output-list",
+      "tv-choice-text-settings", "tv-choice-text-list",
       "date-offset-tool", "date-offset-days", "insert-date-plus", "insert-date-minus", "date-offset-status",
       "import-file", "drop-overlay"
     ].forEach((id) => { elements[id] = byId(id); });
@@ -428,29 +428,38 @@
     elements["edit-package"].value = item.package || "";
     elements["edit-message"].value = item.template || "";
     elements["edit-broadband2"].value = item.broadband2 || "";
-    elements["edit-tv1"].value = item.tv1 || "";
-    elements["edit-tv2"].value = item.tv2 || "";
     updateTemplateFieldHelp();
   }
 
-  function renderTvOutputs() {
+  function renderTvChoiceTexts(fields) {
     const item = currentDraftTemplate();
-    const list = elements["tv-output-list"];
+    const section = elements["tv-choice-text-settings"];
+    const list = elements["tv-choice-text-list"];
+    const outputFields = ["tv1", "tv2"].filter((field) => fields.has(field));
+    section.hidden = outputFields.length === 0;
     list.replaceChildren();
+    if (!outputFields.length) return;
     state.draft.variables.tv.options.forEach((choice) => {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.autocomplete = "off";
-      input.value = item.tv_outputs?.[choice] || choice;
-      input.setAttribute("aria-label", `Text inserted for ${choice}`);
-      input.addEventListener("input", () => {
-        if (!item.tv_outputs) item.tv_outputs = {};
-        const output = input.value;
-        if (!output.trim() || output.trim() === choice) delete item.tv_outputs[choice];
-        else item.tv_outputs[choice] = output;
-        if (!Object.keys(item.tv_outputs).length) delete item.tv_outputs;
+      const row = document.createElement("article");
+      row.className = `tv-choice-text-row ${outputFields.length === 1 ? "single-output" : "double-output"}`;
+      const title = document.createElement("strong");
+      title.textContent = choice;
+      row.append(title);
+      outputFields.forEach((field) => {
+        const outputField = `${field}_outputs`;
+        const input = document.createElement("textarea");
+        input.rows = 2;
+        input.value = item[outputField]?.[choice] || "";
+        input.setAttribute("aria-label", `${Core.CAMPAIGN_FIELDS[field].label} for ${choice}`);
+        input.addEventListener("input", () => {
+          if (!item[outputField]) item[outputField] = {};
+          if (input.value.trim()) item[outputField][choice] = input.value;
+          else delete item[outputField][choice];
+          if (!Object.keys(item[outputField]).length) delete item[outputField];
+        });
+        row.append(makeField(`${Core.CAMPAIGN_FIELDS[field].label} {${field}}`, input));
       });
-      list.append(makeField(choice, input));
+      list.append(row);
     });
   }
 
@@ -458,12 +467,12 @@
     try {
       const fields = Core.templateFields(elements["edit-message"].value);
       elements["services-help"].hidden = !fields.has("services");
-      elements["tv-output-settings"].hidden = !fields.has("tv");
-      if (fields.has("tv")) renderTvOutputs();
+      renderTvChoiceTexts(fields);
       elements["date-offset-tool"].hidden = ![...fields].some((field) => /^date(?:[+-]\d+)?$/.test(field));
     } catch (_error) {
       elements["services-help"].hidden = true;
-      elements["tv-output-settings"].hidden = true;
+      elements["tv-choice-text-settings"].hidden = true;
+      elements["tv-choice-text-list"].replaceChildren();
       elements["date-offset-tool"].hidden = true;
     }
   }
@@ -473,7 +482,7 @@
     const item = currentDraftTemplate();
     const previousValue = item[field];
     if (value) item[field] = value;
-    else if (["broadband2", "tv1", "tv2"].includes(field)) delete item[field];
+    else if (field === "broadband2") delete item[field];
     else item[field] = value;
     if (field === "title") {
       if (state.draft.default_package === previousValue) state.draft.default_package = value;
@@ -595,23 +604,25 @@
         variable.options = linesFromTextarea(choicesArea.value);
         if (key === "tv") {
           state.draft.packages.forEach((item) => {
-            if (!item.tv_outputs) return;
-            const previousOutputs = item.tv_outputs;
-            const nextOutputs = {};
-            variable.options.forEach((choice, index) => {
-              if (Object.prototype.hasOwnProperty.call(previousOutputs, choice)) {
-                nextOutputs[choice] = previousOutputs[choice];
-                return;
-              }
-              const previousChoice = previousOptions[index];
-              if (previousChoice && !variable.options.includes(previousChoice) && previousOutputs[previousChoice]) {
-                nextOutputs[choice] = previousOutputs[previousChoice];
-              }
+            ["tv1_outputs", "tv2_outputs"].forEach((outputField) => {
+              if (!item[outputField]) return;
+              const previousOutputs = item[outputField];
+              const nextOutputs = {};
+              variable.options.forEach((choice, index) => {
+                if (Object.prototype.hasOwnProperty.call(previousOutputs, choice)) {
+                  nextOutputs[choice] = previousOutputs[choice];
+                  return;
+                }
+                const previousChoice = previousOptions[index];
+                if (previousChoice && !variable.options.includes(previousChoice) && previousOutputs[previousChoice]) {
+                  nextOutputs[choice] = previousOutputs[previousChoice];
+                }
+              });
+              if (Object.keys(nextOutputs).length) item[outputField] = nextOutputs;
+              else delete item[outputField];
             });
-            if (Object.keys(nextOutputs).length) item.tv_outputs = nextOutputs;
-            else delete item.tv_outputs;
           });
-          if (!elements["tv-output-settings"].hidden) renderTvOutputs();
+          if (!elements["tv-choice-text-settings"].hidden) updateTemplateFieldHelp();
         }
         const previous = variable.default;
         defaultSelect.replaceChildren();
@@ -833,7 +844,7 @@
 
     [
       ["edit-title", "title"], ["edit-package", "package"], ["edit-message", "template"],
-      ["edit-broadband2", "broadband2"], ["edit-tv1", "tv1"], ["edit-tv2", "tv2"]
+      ["edit-broadband2", "broadband2"]
     ].forEach(([id, field]) => {
       elements[id].addEventListener("input", (event) => updateDraftField(field, event.target.value));
     });

@@ -177,19 +177,28 @@
         }
         if (typeof source[field] === "string" && source[field].trim()) item[field] = source[field].trim();
       });
-      if (source.tv_outputs !== undefined && (!source.tv_outputs || typeof source.tv_outputs !== "object" || Array.isArray(source.tv_outputs))) {
-        throw new ConfigError(`Template ${index + 1} has invalid TV choice text.`);
-      }
-      const tvOutputs = {};
-      (tvOptions || []).forEach((choice) => {
-        if (!source.tv_outputs || !Object.prototype.hasOwnProperty.call(source.tv_outputs, choice)) return;
-        if (typeof source.tv_outputs[choice] !== "string") {
-          throw new ConfigError(`The TV text for "${choice}" in template ${index + 1} must be text.`);
+      ["tv1", "tv2"].forEach((field) => {
+        const outputField = `${field}_outputs`;
+        const sourceOutputs = source[outputField] === undefined && field === "tv1"
+          ? source.tv_outputs
+          : source[outputField];
+        if (sourceOutputs !== undefined && (!sourceOutputs || typeof sourceOutputs !== "object" || Array.isArray(sourceOutputs))) {
+          throw new ConfigError(`Template ${index + 1} has invalid ${CAMPAIGN_FIELDS[field].label.toLowerCase()} by TV choice.`);
         }
-        const output = source.tv_outputs[choice].trim();
-        if (output && output !== choice) tvOutputs[choice] = output;
+        const outputs = {};
+        (tvOptions || []).forEach((choice) => {
+          let output = item[field] || "";
+          if (sourceOutputs && Object.prototype.hasOwnProperty.call(sourceOutputs, choice)) {
+            if (typeof sourceOutputs[choice] !== "string") {
+              throw new ConfigError(`The ${CAMPAIGN_FIELDS[field].label.toLowerCase()} for "${choice}" must be text.`);
+            }
+            output = sourceOutputs[choice].trim();
+          }
+          if (output) outputs[choice] = output;
+        });
+        if (Object.keys(outputs).length) item[outputField] = outputs;
+        delete item[field];
       });
-      if (Object.keys(tvOutputs).length) item.tv_outputs = tvOutputs;
 
       const normalizedTitle = item.title.toLocaleLowerCase();
       if (titles.has(normalizedTitle)) throw new ConfigError(`The title "${item.title}" is used more than once.`);
@@ -216,7 +225,14 @@
         throw new ConfigError(`The template for "${item.title}" uses {package}, so a package name is required.`);
       }
       Object.entries(CAMPAIGN_FIELDS).forEach(([field, details]) => {
-        if (fields.has(field) && !item[field]) {
+        if (!fields.has(field)) return;
+        if (details.service === "tv") {
+          const outputs = item[`${field}_outputs`] || {};
+          const missingChoice = (tvOptions || []).find((choice) => !outputs[choice]);
+          if (missingChoice) {
+            throw new ConfigError(`The template for "${item.title}" uses {${field}}, so add ${details.label.toLowerCase()} for "${missingChoice}".`);
+          }
+        } else if (!item[field]) {
           throw new ConfigError(`The template for "${item.title}" uses {${field}}, so ${details.label} is required.`);
         }
       });
@@ -316,7 +332,9 @@
     };
 
     Object.entries(CAMPAIGN_FIELDS).forEach(([field, details]) => {
-      const content = String(item[field] || "").trim();
+      const selectedChoice = String(selections[details.service] || "").trim();
+      const choiceOutputs = item[`${field}_outputs`];
+      const content = String(choiceOutputs?.[selectedChoice] || item[field] || "").trim();
       if (fields.has(field) && !content) throw new ConfigError(`Add ${details.label} in Edit templates.`);
       replacements[field] = active.has(details.service) ? content : "";
     });
@@ -326,10 +344,7 @@
       if (fields.has(key) && active.has(key) && !value) {
         throw new ConfigError(`Choose ${String(labels[key] || key).toLowerCase()} first.`);
       }
-      const customOutput = key === "tv" && item.tv_outputs
-        ? String(item.tv_outputs[value] || "").trim()
-        : "";
-      replacements[key] = active.has(key) ? (customOutput || value) : "";
+      replacements[key] = active.has(key) ? value : "";
     });
 
     const dateFields = [...fields].filter((field) => dateOffset(field) !== null);

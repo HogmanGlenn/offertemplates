@@ -25,15 +25,15 @@ function config(overrides = {}) {
 
 test("validates and normalizes a portable configuration", () => {
   const value = config();
-  value.packages[0].template = "Offer {tv}.";
-  value.packages[0].tv_outputs = {
-    "TV Mini": "TV Mini for 9.90 €/month",
-    "TV Max": "TV Max"
+  value.packages[0].template = "Offer {tv}: {tv1}.";
+  value.packages[0].tv1_outputs = {
+    "TV Mini": "Mini offer for 9.90 €/month",
+    "TV Max": "Max offer for 19.90 €/month"
   };
   const result = Core.validateConfig(value);
   assert.equal(result.packages[0].title, "Flexible");
   assert.equal(result.variables.tv.default, "TV Mini");
-  assert.deepEqual(result.packages[0].tv_outputs, { "TV Mini": "TV Mini for 9.90 €/month" });
+  assert.deepEqual(result.packages[0].tv1_outputs, value.packages[0].tv1_outputs);
 });
 
 test("template editor exposes every supported field", () => {
@@ -50,8 +50,8 @@ test("template editor exposes every supported field", () => {
   assert.match(html, /id="insert-date-minus"/);
   assert.match(html, /id="services-help"/);
   assert.match(html, /id="open-field-values"/);
-  assert.match(html, /id="tv-output-settings"[^>]*hidden/);
-  assert.match(html, /id="tv-output-list"/);
+  assert.match(html, /id="tv-choice-text-settings"[^>]*hidden/);
+  assert.match(html, /id="tv-choice-text-list"/);
 });
 
 test("loads older configuration files without variables", () => {
@@ -75,32 +75,70 @@ test("joins only active services and formats the price", () => {
   assert.equal(result, "Offer 1000/1000 + Streaming Plus for 29.90 €/month.");
 });
 
-test("changes the text inserted by tv for each dropdown choice", () => {
+test("updates tv, tv1, and tv2 from the same dropdown choice", () => {
   const item = {
     title: "TV offer",
     package: "",
-    template: "We can offer {tv}.",
-    tv_outputs: {
-      "TV Mini": "TV Mini for 9.90 €/month",
-      "TV Max": "TV Max for 19.90 €/month"
+    template: "{tv}: {tv1} {tv2}",
+    tv1_outputs: {
+      "TV Mini": "Mini offer for 9.90 €/month.",
+      "TV Max": "Max offer for 19.90 €/month."
+    },
+    tv2_outputs: {
+      "TV Mini": "Mini campaign.",
+      "TV Max": "Max campaign."
     }
   };
   assert.equal(Core.renderOffer(item, {
     selections: { tv: "TV Mini" },
     activeVariables: ["tv"]
-  }), "We can offer TV Mini for 9.90 €/month.");
+  }), "TV Mini: Mini offer for 9.90 €/month. Mini campaign.");
   assert.equal(Core.renderOffer(item, {
     selections: { tv: "TV Max" },
     activeVariables: ["tv"]
-  }), "We can offer TV Max for 19.90 €/month.");
+  }), "TV Max: Max offer for 19.90 €/month. Max campaign.");
 });
 
-test("keeps the dropdown label when a tv choice has no custom text", () => {
-  const item = { title: "TV offer", package: "", template: "Watch {tv}." };
+test("keeps tv as the dropdown label", () => {
+  const item = {
+    title: "TV offer",
+    package: "",
+    template: "Watch {tv}.",
+    tv_outputs: { "TV Mini": "This old value must not replace {tv}." }
+  };
   assert.equal(Core.renderOffer(item, {
     selections: { tv: "TV Mini" },
     activeVariables: ["tv"]
   }), "Watch TV Mini.");
+});
+
+test("migrates older shared and choice-specific TV offer text", () => {
+  const shared = config();
+  shared.packages[0] = {
+    title: "Flexible",
+    package: "",
+    template: "{tv}: {tv1}",
+    tv1: "Shared offer"
+  };
+  assert.deepEqual(Core.validateConfig(shared).packages[0].tv1_outputs, {
+    "TV Mini": "Shared offer",
+    "TV Max": "Shared offer"
+  });
+
+  const choiceSpecific = config();
+  choiceSpecific.packages[0] = {
+    title: "Flexible",
+    package: "",
+    template: "{tv}: {tv1}",
+    tv_outputs: {
+      "TV Mini": "Mini offer",
+      "TV Max": "Max offer"
+    }
+  };
+  assert.deepEqual(Core.validateConfig(choiceSpecific).packages[0].tv1_outputs, {
+    "TV Mini": "Mini offer",
+    "TV Max": "Max offer"
+  });
 });
 
 test("supports package, service, and independent broadband price fields", () => {
@@ -167,6 +205,15 @@ test("rejects duplicate titles, choices, and unknown fields", () => {
   assert.throws(() => Core.validateConfig(config({
     packages: [{ title: "Unknown", package: "", template: "Hello {customer}" }]
   })), /unknown field/);
+
+  const missingTvText = config();
+  missingTvText.packages[0] = {
+    title: "Flexible",
+    package: "",
+    template: "{tv}: {tv1}",
+    tv1_outputs: { "TV Mini": "Mini offer" }
+  };
+  assert.throws(() => Core.validateConfig(missingTvText), /tv offer text for "TV Max"/i);
 });
 
 test("requires values only when their active fields use them", () => {

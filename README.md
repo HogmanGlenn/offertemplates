@@ -15,7 +15,7 @@ Select **Edit templates** to change:
 - template titles, package names, messages, and saved campaign text;
 - currencies;
 - broadband, TV, and streaming field names and choices;
-- different text for each TV choice when a template uses `{tv}`;
+- different `{tv1}` and `{tv2}` text for each TV package;
 - the default template, currency, and service choices.
 
 Changes are validated before they are saved. Settings stay in that browser's local storage and are not sent anywhere.
@@ -35,20 +35,20 @@ Existing `packages.json` files from the Windows version are accepted, so current
 | `{services}` | Active service choices joined with ` + ` |
 | `{broadband}` | Selected broadband choice |
 | `{broadband_price}` | Broadband price plus the selected currency |
-| `{tv}` | Text saved for the selected TV choice |
+| `{tv}` | Selected TV package name |
 | `{streaming}` | Selected streaming choice |
 | `{package}` | Package name saved with the template |
 | `{price}` | Offer price plus the selected currency |
 | `{broadband2}` | Saved broadband campaign text |
-| `{tv1}` | Saved TV offer text |
-| `{tv2}` | Saved TV campaign text |
+| `{tv1}` | TV offer text saved for the selected package |
+| `{tv2}` | TV campaign text saved for the selected package |
 | `{date}` | Current date, or the entered override, as `DD/MM/YYYY` |
 | `{date+N}` | The date any whole number of days later, such as `{date+137}` |
 | `{date-N}` | The date any whole number of days earlier, such as `{date-14}` |
 
 Use doubled braces for literal braces: `{{price}}` produces `{price}` instead of inserting a price. Date offsets are limited to 365,000 days as a safety bound.
 
-When a template contains `{tv}`, its editor shows **Text inserted by {tv}**. Enter the complete text for each TV choice there, including a choice-specific price when needed. Changing the TV dropdown then changes that whole part of the finished message. If no custom text is entered, `{tv}` uses the dropdown choice itself.
+`{tv}` always uses the name selected in the TV dropdown. When a template contains `{tv1}` or `{tv2}`, its editor shows **TV text by package**. Enter the matching offer or campaign text for each TV package. Changing the TV dropdown then updates `{tv}`, `{tv1}`, and `{tv2}` together.
 
 ## Publish on GitHub Pages
 
