@@ -1,0 +1,61 @@
+{
+  "default_package": "Flexible offer",
+  "default_currency": "€/month",
+  "currencies": [
+    "€/month",
+    "€",
+    "$/month",
+    "$",
+    "£/month",
+    "£"
+  ],
+  "variables": {
+    "broadband": {
+      "label": "Broadband",
+      "options": [
+        "1000/1000",
+        "500/500",
+        "100/100"
+      ],
+      "default": "1000/1000"
+    },
+    "tv": {
+      "label": "TV package",
+      "options": [
+        "TV Mini",
+        "TV Standard",
+        "TV Premium"
+      ],
+      "default": "TV Mini"
+    },
+    "streaming": {
+      "label": "Streaming package",
+      "options": [
+        "Streaming package"
+      ],
+      "default": "Streaming package"
+    }
+  },
+  "packages": [
+    {
+      "title": "Flexible offer",
+      "package": "",
+      "template": "Hi! We would like to offer you {services} for a discounted price of {price}."
+    },
+    {
+      "title": "Entertainment",
+      "package": "Entertainment TV package",
+      "template": "Hi! We would like to offer you {package} for a discounted price of {price}."
+    },
+    {
+      "title": "Sports",
+      "package": "Sports TV package",
+      "template": "Hi! We would like to offer you {package} for a discounted price of {price}."
+    },
+    {
+      "title": "Movies",
+      "package": "Movies TV package",
+      "template": "Hi! We would like to offer you {package} for a discounted price of {price}."
+    }
+  ]
+}
