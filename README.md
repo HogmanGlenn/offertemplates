@@ -15,6 +15,7 @@ Select **Edit templates** to change:
 - template titles, package names, messages, and saved campaign text;
 - currencies;
 - broadband, TV, and streaming field names and choices;
+- different text for each TV choice when a template uses `{tv}`;
 - the default template, currency, and service choices.
 
 Changes are validated before they are saved. Settings stay in that browser's local storage and are not sent anywhere.
@@ -34,7 +35,7 @@ Existing `packages.json` files from the Windows version are accepted, so current
 | `{services}` | Active service choices joined with ` + ` |
 | `{broadband}` | Selected broadband choice |
 | `{broadband_price}` | Broadband price plus the selected currency |
-| `{tv}` | Selected TV choice |
+| `{tv}` | Text saved for the selected TV choice |
 | `{streaming}` | Selected streaming choice |
 | `{package}` | Package name saved with the template |
 | `{price}` | Offer price plus the selected currency |
@@ -46,6 +47,8 @@ Existing `packages.json` files from the Windows version are accepted, so current
 | `{date-N}` | The date any whole number of days earlier, such as `{date-14}` |
 
 Use doubled braces for literal braces: `{{price}}` produces `{price}` instead of inserting a price. Date offsets are limited to 365,000 days as a safety bound.
+
+When a template contains `{tv}`, its editor shows **Text inserted by {tv}**. Enter the complete text for each TV choice there, including a choice-specific price when needed. Changing the TV dropdown then changes that whole part of the finished message. If no custom text is entered, `{tv}` uses the dropdown choice itself.
 
 ## Publish on GitHub Pages
 

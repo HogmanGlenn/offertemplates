@@ -153,6 +153,13 @@
               </div>
               <button class="button button-secondary compact" id="open-field-values" type="button">Edit field choices</button>
             </div>
+            <section class="choice-output-settings" id="tv-output-settings" aria-labelledby="tv-output-title" hidden>
+              <div class="choice-output-heading">
+                <strong id="tv-output-title">Text inserted by {tv}</strong>
+                <p>Set the text for each TV choice. It can include a different price or any other wording that changes between packages.</p>
+              </div>
+              <div class="choice-output-list" id="tv-output-list"></div>
+            </section>
             <details class="campaign-details">
               <summary>Saved campaign text</summary>
               <p>These blocks are inserted by their matching field and disappear when that service is removed.</p>
@@ -257,6 +264,7 @@
           <h3 id="edit-title-help">Edit templates</h3>
           <p>Select <strong>Edit templates</strong> to add, duplicate, rename, or remove a template. Change the message in the template editor and use the Insert buttons to add fields. Select <strong>Save changes</strong> when you are finished.</p>
           <p>The package name is only added when the message contains <code>{package}</code>.</p>
+          <p>When a message contains <code>{tv}</code>, set the text for each TV choice under <strong>Text inserted by {tv}</strong>. Each choice can include its own price and wording.</p>
         </section>
 
         <section class="instruction-section" aria-labelledby="fields-title-help">
@@ -265,7 +273,7 @@
             <div><dt><code>{services}</code></dt><dd>Combines the choices selected under Included services.</dd></div>
             <div><dt><code>{broadband}</code></dt><dd>Adds the selected broadband option.</dd></div>
             <div><dt><code>{broadband_price}</code></dt><dd>Adds the broadband price and currency.</dd></div>
-            <div><dt><code>{tv}</code></dt><dd>Adds the selected TV option.</dd></div>
+            <div><dt><code>{tv}</code></dt><dd>Adds the text saved for the selected TV choice.</dd></div>
             <div><dt><code>{streaming}</code></dt><dd>Adds the selected streaming option.</dd></div>
             <div><dt><code>{package}</code></dt><dd>Adds the package name saved with the template.</dd></div>
             <div><dt><code>{price}</code></dt><dd>Adds the main price and currency.</dd></div>

@@ -148,7 +148,7 @@
     return result;
   }
 
-  function validatePackages(value) {
+  function validatePackages(value, tvOptions) {
     if (!Array.isArray(value) || value.length === 0) {
       throw new ConfigError("The configuration must contain at least one template.");
     }
@@ -177,6 +177,19 @@
         }
         if (typeof source[field] === "string" && source[field].trim()) item[field] = source[field].trim();
       });
+      if (source.tv_outputs !== undefined && (!source.tv_outputs || typeof source.tv_outputs !== "object" || Array.isArray(source.tv_outputs))) {
+        throw new ConfigError(`Template ${index + 1} has invalid TV choice text.`);
+      }
+      const tvOutputs = {};
+      (tvOptions || []).forEach((choice) => {
+        if (!source.tv_outputs || !Object.prototype.hasOwnProperty.call(source.tv_outputs, choice)) return;
+        if (typeof source.tv_outputs[choice] !== "string") {
+          throw new ConfigError(`The TV text for "${choice}" in template ${index + 1} must be text.`);
+        }
+        const output = source.tv_outputs[choice].trim();
+        if (output && output !== choice) tvOutputs[choice] = output;
+      });
+      if (Object.keys(tvOutputs).length) item.tv_outputs = tvOutputs;
 
       const normalizedTitle = item.title.toLocaleLowerCase();
       if (titles.has(normalizedTitle)) throw new ConfigError(`The title "${item.title}" is used more than once.`);
@@ -215,13 +228,13 @@
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       throw new ConfigError("The imported file must contain an OfferTemplates configuration.");
     }
-    const packages = validatePackages(value.packages);
     const currencies = cleanUniqueList(
       value.currencies === undefined ? DEFAULT_CURRENCIES : value.currencies,
       "The configuration must contain at least one currency.",
       "Currency"
     );
     const variables = validateVariables(value.variables === undefined ? clone(DEFAULT_VARIABLES) : value.variables);
+    const packages = validatePackages(value.packages, variables.tv.options);
     const defaultPackage = value.default_package === undefined ? packages[0].title : value.default_package;
     const defaultCurrency = value.default_currency === undefined ? currencies[0] : value.default_currency;
     if (!packages.some((item) => item.title === defaultPackage)) {
@@ -313,7 +326,10 @@
       if (fields.has(key) && active.has(key) && !value) {
         throw new ConfigError(`Choose ${String(labels[key] || key).toLowerCase()} first.`);
       }
-      replacements[key] = active.has(key) ? value : "";
+      const customOutput = key === "tv" && item.tv_outputs
+        ? String(item.tv_outputs[value] || "").trim()
+        : "";
+      replacements[key] = active.has(key) ? (customOutput || value) : "";
     });
 
     const dateFields = [...fields].filter((field) => dateOffset(field) !== null);

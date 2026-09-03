@@ -24,9 +24,16 @@ function config(overrides = {}) {
 }
 
 test("validates and normalizes a portable configuration", () => {
-  const result = Core.validateConfig(config());
+  const value = config();
+  value.packages[0].template = "Offer {tv}.";
+  value.packages[0].tv_outputs = {
+    "TV Mini": "TV Mini for 9.90 €/month",
+    "TV Max": "TV Max"
+  };
+  const result = Core.validateConfig(value);
   assert.equal(result.packages[0].title, "Flexible");
   assert.equal(result.variables.tv.default, "TV Mini");
+  assert.deepEqual(result.packages[0].tv_outputs, { "TV Mini": "TV Mini for 9.90 €/month" });
 });
 
 test("template editor exposes every supported field", () => {
@@ -43,6 +50,8 @@ test("template editor exposes every supported field", () => {
   assert.match(html, /id="insert-date-minus"/);
   assert.match(html, /id="services-help"/);
   assert.match(html, /id="open-field-values"/);
+  assert.match(html, /id="tv-output-settings"[^>]*hidden/);
+  assert.match(html, /id="tv-output-list"/);
 });
 
 test("loads older configuration files without variables", () => {
@@ -64,6 +73,34 @@ test("joins only active services and formats the price", () => {
     activeVariables: new Set(["broadband", "streaming"])
   });
   assert.equal(result, "Offer 1000/1000 + Streaming Plus for 29.90 €/month.");
+});
+
+test("changes the text inserted by tv for each dropdown choice", () => {
+  const item = {
+    title: "TV offer",
+    package: "",
+    template: "We can offer {tv}.",
+    tv_outputs: {
+      "TV Mini": "TV Mini for 9.90 €/month",
+      "TV Max": "TV Max for 19.90 €/month"
+    }
+  };
+  assert.equal(Core.renderOffer(item, {
+    selections: { tv: "TV Mini" },
+    activeVariables: ["tv"]
+  }), "We can offer TV Mini for 9.90 €/month.");
+  assert.equal(Core.renderOffer(item, {
+    selections: { tv: "TV Max" },
+    activeVariables: ["tv"]
+  }), "We can offer TV Max for 19.90 €/month.");
+});
+
+test("keeps the dropdown label when a tv choice has no custom text", () => {
+  const item = { title: "TV offer", package: "", template: "Watch {tv}." };
+  assert.equal(Core.renderOffer(item, {
+    selections: { tv: "TV Mini" },
+    activeVariables: ["tv"]
+  }), "Watch TV Mini.");
 });
 
 test("supports package, service, and independent broadband price fields", () => {

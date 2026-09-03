@@ -37,6 +37,7 @@
       "edit-title", "edit-package", "edit-message", "edit-broadband2", "edit-tv1", "edit-tv2",
       "field-settings", "currency-settings", "default-template", "default-currency", "copy-settings", "reset-settings",
       "open-instructions", "instructions-modal", "close-instructions", "done-instructions", "open-field-values", "services-help",
+      "tv-output-settings", "tv-output-list",
       "date-offset-tool", "date-offset-days", "insert-date-plus", "insert-date-minus", "date-offset-status",
       "import-file", "drop-overlay"
     ].forEach((id) => { elements[id] = byId(id); });
@@ -432,13 +433,37 @@
     updateTemplateFieldHelp();
   }
 
+  function renderTvOutputs() {
+    const item = currentDraftTemplate();
+    const list = elements["tv-output-list"];
+    list.replaceChildren();
+    state.draft.variables.tv.options.forEach((choice) => {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.autocomplete = "off";
+      input.value = item.tv_outputs?.[choice] || choice;
+      input.setAttribute("aria-label", `Text inserted for ${choice}`);
+      input.addEventListener("input", () => {
+        if (!item.tv_outputs) item.tv_outputs = {};
+        const output = input.value;
+        if (!output.trim() || output.trim() === choice) delete item.tv_outputs[choice];
+        else item.tv_outputs[choice] = output;
+        if (!Object.keys(item.tv_outputs).length) delete item.tv_outputs;
+      });
+      list.append(makeField(choice, input));
+    });
+  }
+
   function updateTemplateFieldHelp() {
     try {
       const fields = Core.templateFields(elements["edit-message"].value);
       elements["services-help"].hidden = !fields.has("services");
+      elements["tv-output-settings"].hidden = !fields.has("tv");
+      if (fields.has("tv")) renderTvOutputs();
       elements["date-offset-tool"].hidden = ![...fields].some((field) => /^date(?:[+-]\d+)?$/.test(field));
     } catch (_error) {
       elements["services-help"].hidden = true;
+      elements["tv-output-settings"].hidden = true;
       elements["date-offset-tool"].hidden = true;
     }
   }
@@ -566,7 +591,28 @@
         title.textContent = nameInput.value || "Unnamed field";
       });
       choicesArea.addEventListener("input", () => {
+        const previousOptions = [...variable.options];
         variable.options = linesFromTextarea(choicesArea.value);
+        if (key === "tv") {
+          state.draft.packages.forEach((item) => {
+            if (!item.tv_outputs) return;
+            const previousOutputs = item.tv_outputs;
+            const nextOutputs = {};
+            variable.options.forEach((choice, index) => {
+              if (Object.prototype.hasOwnProperty.call(previousOutputs, choice)) {
+                nextOutputs[choice] = previousOutputs[choice];
+                return;
+              }
+              const previousChoice = previousOptions[index];
+              if (previousChoice && !variable.options.includes(previousChoice) && previousOutputs[previousChoice]) {
+                nextOutputs[choice] = previousOutputs[previousChoice];
+              }
+            });
+            if (Object.keys(nextOutputs).length) item.tv_outputs = nextOutputs;
+            else delete item.tv_outputs;
+          });
+          if (!elements["tv-output-settings"].hidden) renderTvOutputs();
+        }
         const previous = variable.default;
         defaultSelect.replaceChildren();
         variable.options.forEach((choice) => {
