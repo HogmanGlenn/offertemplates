@@ -93,21 +93,21 @@ test("omits campaign text when its service is removed", () => {
   assert.equal(Core.renderOffer(item, { activeVariables: ["tv"] }), "TV campaign");
 });
 
-test("renders positive and negative date offsets as DD.MM.YYYY", () => {
+test("renders positive and negative date offsets as DD/MM/YYYY", () => {
   const item = {
     title: "Dates",
     package: "",
     template: "Today {date}; next {date+137}; before {date-40}"
   };
   const result = Core.renderOffer(item, { today: new Date(Date.UTC(2026, 0, 10)) });
-  assert.equal(result, "Today 10.01.2026; next 27.05.2026; before 01.12.2025");
+  assert.equal(result, "Today 10/01/2026; next 27/05/2026; before 01/12/2025");
 });
 
 test("date override is strict and applies to every date field", () => {
   const item = { title: "Date", package: "", template: "{date} / {date+30}" };
-  assert.equal(Core.renderOffer(item, { dateOverride: "15.01.2027" }), "15.01.2027 / 14.02.2027");
-  assert.throws(() => Core.renderOffer(item, { dateOverride: "2027-01-15" }), /DD\.MM\.YYYY/);
-  assert.throws(() => Core.renderOffer(item, { dateOverride: "30.02.2027" }), /DD\.MM\.YYYY/);
+  assert.equal(Core.renderOffer(item, { dateOverride: "15/01/2027" }), "15/01/2027 / 14/02/2027");
+  assert.throws(() => Core.renderOffer(item, { dateOverride: "2027-01-15" }), /DD\/MM\/YYYY/);
+  assert.throws(() => Core.renderOffer(item, { dateOverride: "30/02/2027" }), /DD\/MM\/YYYY/);
 });
 
 test("allows escaped literal braces", () => {

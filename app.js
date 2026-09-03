@@ -211,8 +211,7 @@
     }
     const hasDate = [...fields].some((field) => /^date(?:[+-]\d+)?$/.test(field));
     if (hasDate) {
-      const input = makeInput("date-input", state.values.dateOverride, "DD.MM.YYYY", "numeric");
-      input.setAttribute("aria-describedby", "date-help");
+      const input = makeInput("date-input", state.values.dateOverride, "DD/MM/YYYY", "numeric");
       input.addEventListener("input", () => { state.values.dateOverride = input.value; updatePreview(); });
       standard.append(makeField("Date override (optional)", input, { fullWidth: !usesPrice && !usesCurrency }));
     }
@@ -335,7 +334,7 @@
       }
       if (message.includes("price first")) byId("price-input")?.focus();
       else if (message.includes("broadband price")) byId("broadband-price-input")?.focus();
-      else if (message.includes("DD.MM.YYYY")) byId("date-input")?.focus();
+      else if (message.includes("DD/MM/YYYY")) byId("date-input")?.focus();
     }
   }
 

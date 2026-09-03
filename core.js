@@ -240,14 +240,14 @@
   }
 
   function parseDisplayDate(value) {
-    const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(value);
-    if (!match) throw new ConfigError("Enter the date as DD.MM.YYYY.");
+    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+    if (!match) throw new ConfigError("Enter the date as DD/MM/YYYY.");
     const day = Number(match[1]);
     const month = Number(match[2]);
     const year = Number(match[3]);
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-      throw new ConfigError("Enter the date as DD.MM.YYYY.");
+      throw new ConfigError("Enter the date as DD/MM/YYYY.");
     }
     return date;
   }
@@ -260,7 +260,7 @@
   function formatDisplayDate(date) {
     const day = String(date.getUTCDate()).padStart(2, "0");
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    return `${day}.${month}.${date.getUTCFullYear()}`;
+    return `${day}/${month}/${date.getUTCFullYear()}`;
   }
 
   function addDays(date, amount) {

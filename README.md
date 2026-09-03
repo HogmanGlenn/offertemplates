@@ -41,7 +41,7 @@ Existing `packages.json` files from the Windows version are accepted, so current
 | `{broadband2}` | Saved broadband campaign text |
 | `{tv1}` | Saved TV offer text |
 | `{tv2}` | Saved TV campaign text |
-| `{date}` | Current date, or the entered override, as `DD.MM.YYYY` |
+| `{date}` | Current date, or the entered override, as `DD/MM/YYYY` |
 | `{date+N}` | The date any whole number of days later, such as `{date+137}` |
 | `{date-N}` | The date any whole number of days earlier, such as `{date-14}` |
 
