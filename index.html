@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111419">
+  <meta name="description" content="Prepare reusable broadband, TV, and streaming offers in your browser.">
+  <title>OfferTemplates</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-bar" id="app-bar">
+    <div class="brand">
+      <h1>OfferTemplates</h1>
+    </div>
+    <div class="header-actions">
+      <button class="button button-quiet compact" type="button" data-action="import">Import</button>
+      <button class="button button-quiet compact" type="button" data-action="export">Export</button>
+      <button class="button button-secondary compact" id="open-instructions" type="button">Instructions</button>
+      <button class="button button-secondary compact" id="open-settings" type="button">Edit templates</button>
+    </div>
+  </header>
+
+  <main class="workspace" id="app" aria-busy="true">
+    <section class="panel composer" aria-labelledby="compose-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Offer details</p>
+          <h2 id="compose-title">Build the message</h2>
+        </div>
+        <span class="save-indicator" id="save-indicator">Saved in this browser</span>
+      </div>
+
+      <div class="form-stack">
+        <label class="field full-width">
+          <span>Template</span>
+          <select id="template-select"></select>
+        </label>
+
+        <div class="form-grid" id="standard-fields"></div>
+
+        <section class="service-section" id="service-section" aria-labelledby="services-title">
+          <div class="subsection-heading">
+            <div>
+              <h3 id="services-title">Included services</h3>
+              <p>Choose only what belongs in this offer.</p>
+            </div>
+          </div>
+          <div class="service-toggles" id="service-toggles"></div>
+          <div class="service-fields" id="service-fields"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="panel preview-panel" aria-labelledby="preview-title">
+      <div class="section-heading preview-heading">
+        <div>
+          <p class="eyebrow">Live preview</p>
+          <h2 id="preview-title">Finished message</h2>
+        </div>
+        <span class="character-count" id="character-count" aria-live="polite"></span>
+      </div>
+      <div class="preview-shell" id="preview-shell">
+        <pre id="preview" tabindex="0"></pre>
+        <p class="preview-placeholder" id="preview-placeholder">Fill in the required fields to preview this offer.</p>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <button class="button button-primary copy-button" id="copy-offer" type="button">Copy offer</button>
+      <p class="keyboard-hint">Ctrl + Enter also copies the finished message.</p>
+    </section>
+  </main>
+
+  <div class="drop-overlay" id="drop-overlay" aria-hidden="true">
+    <div>Drop an OfferTemplates JSON file to import it</div>
+  </div>
+
+  <div class="modal-backdrop" id="settings-modal" hidden>
+    <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header class="settings-header">
+        <div>
+          <p class="eyebrow">Configuration</p>
+          <h2 id="settings-title">Edit OfferTemplates</h2>
+        </div>
+        <button class="icon-button" id="close-settings" type="button" aria-label="Close settings">×</button>
+      </header>
+
+      <nav class="tabs" aria-label="Settings sections">
+        <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="templates">Templates</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="fields">Fields & defaults</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="transfer">Transfer</button>
+      </nav>
+
+      <div class="settings-body">
+        <section class="tab-panel active" id="tab-templates" role="tabpanel">
+          <aside class="template-sidebar">
+            <div class="sidebar-title-row">
+              <h3>Your templates</h3>
+              <span id="template-count"></span>
+            </div>
+            <div class="template-list" id="template-list" role="listbox" aria-label="Templates"></div>
+            <div class="sidebar-actions">
+              <button class="button button-secondary compact" id="add-template" type="button">Add</button>
+              <button class="button button-quiet compact" id="duplicate-template" type="button">Duplicate</button>
+              <button class="button button-danger compact" id="delete-template" type="button">Delete</button>
+            </div>
+          </aside>
+
+          <div class="template-editor" id="template-editor">
+            <div class="form-grid editor-basics">
+              <label class="field">
+                <span>Template title</span>
+                <input id="edit-title" type="text" autocomplete="off">
+              </label>
+              <label class="field">
+                <span>Package name <small>for {package}</small></span>
+                <input id="edit-package" type="text" autocomplete="off">
+              </label>
+            </div>
+            <label class="field full-width message-field">
+              <span>Message template</span>
+              <textarea id="edit-message" rows="9" spellcheck="true"></textarea>
+            </label>
+            <div class="token-help" aria-label="Available template fields">
+              <span>Insert field:</span>
+              <button type="button" data-token="{services}">{services}</button>
+              <button type="button" data-token="{broadband}">{broadband}</button>
+              <button type="button" data-token="{broadband_price}">{broadband_price}</button>
+              <button type="button" data-token="{broadband2}">{broadband2}</button>
+              <button type="button" data-token="{tv}">{tv}</button>
+              <button type="button" data-token="{tv1}">{tv1}</button>
+              <button type="button" data-token="{tv2}">{tv2}</button>
+              <button type="button" data-token="{streaming}">{streaming}</button>
+              <button type="button" data-token="{package}">{package}</button>
+              <button type="button" data-token="{price}">{price}</button>
+              <button type="button" data-token="{date}">{date}</button>
+            </div>
+            <div class="date-offset-tool" id="date-offset-tool" hidden>
+              <label class="field">
+                <span>Date offset in days</span>
+                <input id="date-offset-days" type="text" value="14" inputmode="numeric" autocomplete="off" aria-describedby="date-offset-status">
+              </label>
+              <div class="date-offset-actions">
+                <button class="date-token-button" id="insert-date-plus" type="button">Insert {date+14}</button>
+                <button class="date-token-button" id="insert-date-minus" type="button">Insert {date-14}</button>
+              </div>
+              <p class="date-offset-status" id="date-offset-status" role="alert" hidden></p>
+            </div>
+            <div class="field-value-help" id="services-help">
+              <div>
+                <strong>Using {services}</strong>
+                <p><code>{services}</code> combines the service choices selected while building the offer. Field names and choices are changed in Fields &amp; defaults. Package and campaign text are edited here. Prices and dates are entered while building the offer.</p>
+              </div>
+              <button class="button button-secondary compact" id="open-field-values" type="button">Edit field choices</button>
+            </div>
+            <details class="campaign-details">
+              <summary>Saved campaign text</summary>
+              <p>These blocks are inserted by their matching field and disappear when that service is removed.</p>
+              <div class="campaign-grid">
+                <label class="field full-width">
+                  <span>Broadband campaign text <small>{broadband2}</small></span>
+                  <textarea id="edit-broadband2" rows="4"></textarea>
+                </label>
+                <label class="field full-width">
+                  <span>TV offer text <small>{tv1}</small></span>
+                  <textarea id="edit-tv1" rows="4"></textarea>
+                </label>
+                <label class="field full-width">
+                  <span>TV campaign text <small>{tv2}</small></span>
+                  <textarea id="edit-tv2" rows="4"></textarea>
+                </label>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-fields" role="tabpanel" hidden>
+          <div class="settings-overview">
+            <section class="settings-card" id="currency-settings"></section>
+            <section class="settings-card defaults-card">
+              <h3>Startup defaults</h3>
+              <div class="form-grid">
+                <label class="field">
+                  <span>Default template</span>
+                  <select id="default-template"></select>
+                </label>
+                <label class="field">
+                  <span>Default currency</span>
+                  <select id="default-currency"></select>
+                </label>
+              </div>
+            </section>
+          </div>
+          <div class="settings-grid" id="field-settings"></div>
+        </section>
+
+        <section class="tab-panel" id="tab-transfer" role="tabpanel" hidden>
+          <div class="transfer-intro">
+            <h3>Move templates between browsers</h3>
+            <p>Your templates are stored only in this browser. Download one JSON backup to move your templates, choices, field names, and defaults to another device.</p>
+          </div>
+          <div class="transfer-options">
+            <article class="transfer-card">
+              <h4>Download backup</h4>
+              <p>Save the current settings as a portable JSON file.</p>
+              <button class="button button-primary" type="button" data-action="export">Download JSON</button>
+            </article>
+            <article class="transfer-card">
+              <h4>Import backup</h4>
+              <p>Replace the current settings with an OfferTemplates JSON file.</p>
+              <button class="button button-secondary" type="button" data-action="import">Choose JSON file</button>
+            </article>
+            <article class="transfer-card">
+              <h4>Copy as text</h4>
+              <p>Copy the complete settings JSON for quick transfer.</p>
+              <button class="button button-secondary" id="copy-settings" type="button">Copy settings</button>
+            </article>
+            <article class="transfer-card">
+              <h4>Bundled defaults</h4>
+              <p>Discard browser changes and return to the templates shipped with this site.</p>
+              <button class="button button-danger" id="reset-settings" type="button">Restore defaults</button>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <footer class="settings-footer">
+        <p class="settings-status" id="settings-status" role="status" aria-live="polite"></p>
+        <div>
+          <button class="button button-quiet" id="cancel-settings" type="button">Cancel</button>
+          <button class="button button-primary" id="save-settings" type="button">Save changes</button>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="instructions-modal" hidden>
+    <section class="instructions-dialog" role="dialog" aria-modal="true" aria-labelledby="instructions-title">
+      <header class="instructions-header">
+        <h2 id="instructions-title">Instructions</h2>
+        <button class="icon-button" id="close-instructions" type="button" aria-label="Close instructions">×</button>
+      </header>
+
+      <div class="instructions-body">
+        <section class="instruction-section" aria-labelledby="use-title">
+          <h3 id="use-title">Create an offer</h3>
+          <ol class="instruction-steps">
+            <li>Choose a template.</li>
+            <li>Select the services that belong in the offer.</li>
+            <li>Fill in the fields that appear.</li>
+            <li>Check the finished message, then select <strong>Copy offer</strong>.</li>
+          </ol>
+          <p>If a value is missing or invalid, the message under the preview tells you what to fix. Only fields used by the selected template are required.</p>
+        </section>
+
+        <section class="instruction-section" aria-labelledby="edit-title-help">
+          <h3 id="edit-title-help">Edit templates</h3>
+          <p>Select <strong>Edit templates</strong> to add, duplicate, rename, or remove a template. Change the message in the template editor and use the Insert buttons to add fields. Select <strong>Save changes</strong> when you are finished.</p>
+          <p>The package name is only added when the message contains <code>{package}</code>.</p>
+        </section>
+
+        <section class="instruction-section" aria-labelledby="fields-title-help">
+          <h3 id="fields-title-help">Template fields</h3>
+          <dl class="field-reference">
+            <div><dt><code>{services}</code></dt><dd>Combines the choices selected under Included services.</dd></div>
+            <div><dt><code>{broadband}</code></dt><dd>Adds the selected broadband option.</dd></div>
+            <div><dt><code>{broadband_price}</code></dt><dd>Adds the broadband price and currency.</dd></div>
+            <div><dt><code>{tv}</code></dt><dd>Adds the selected TV option.</dd></div>
+            <div><dt><code>{streaming}</code></dt><dd>Adds the selected streaming option.</dd></div>
+            <div><dt><code>{package}</code></dt><dd>Adds the package name saved with the template.</dd></div>
+            <div><dt><code>{price}</code></dt><dd>Adds the main price and currency.</dd></div>
+            <div><dt><code>{broadband2}</code></dt><dd>Adds the saved broadband campaign text.</dd></div>
+            <div><dt><code>{tv1}</code></dt><dd>Adds the saved TV offer text.</dd></div>
+            <div><dt><code>{tv2}</code></dt><dd>Adds the saved TV campaign text.</dd></div>
+            <div><dt><code>{date}</code></dt><dd>Adds today's date, or the date entered in the form.</dd></div>
+            <div><dt><code>{date+N}</code></dt><dd>Adds a date after the chosen date. Replace N with any number of days, such as <code>{date+14}</code>.</dd></div>
+            <div><dt><code>{date-N}</code></dt><dd>Adds a date before the chosen date.</dd></div>
+          </dl>
+          <p>Enter dates as <strong>DD.MM.YYYY</strong>.</p>
+        </section>
+
+        <section class="instruction-section" aria-labelledby="save-title-help">
+          <h3 id="save-title-help">Saving and moving settings</h3>
+          <p>Template settings are saved in this browser on this device. They remain available when you close and reopen the page. Clearing this site's browser data removes them.</p>
+          <p>Use <strong>Export</strong> to download a JSON backup. Use <strong>Import</strong> to load that file in another browser or on another device. Importing replaces the current browser settings, so export a backup first if you want to keep them.</p>
+        </section>
+      </div>
+
+      <footer class="instructions-footer">
+        <button class="button button-primary" id="done-instructions" type="button">Done</button>
+      </footer>
+    </section>
+  </div>
+
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "offertemplates",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Static browser application for preparing reusable offers.",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check core.js && node --check app.js"
+  }
+}

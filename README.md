@@ -1,50 +1,86 @@
 # OfferTemplates
 
-A small Windows app for preparing broadband, TV, and streaming offers and copying them to the clipboard.
-It uses a dark interface and automatically scales and centers itself for the primary display.
+OfferTemplates is a static browser application for preparing reusable broadband, TV, and streaming offers. It runs entirely in the browser and can be hosted directly on GitHub Pages. There is no backend, account, build step, or external dependency.
 
-## Start the app
+## Use it
 
-Double-click `OfferTemplates.exe` in the `release` folder. It is a self-contained Windows app: Python does not need to be installed, and no Command Prompt window opens.
+Open the site, choose a template, add the services included in the offer, fill in the visible values, and select **Copy offer**. The preview updates while you type. `Ctrl + Enter` (`Cmd + Enter` on macOS) also copies the finished message.
 
-To give the app to someone else, send them only `OfferTemplates.exe`. Every new user starts with the clean bundled templates.
+Only the fields used by the selected template are shown. A service can still be removed from an offer even when the template supports it.
 
-## Daily use
+## Edit templates and choices
 
-1. Choose a template.
-2. Use **Optional fields** to add Broadband, TV, or Streaming only when the offer needs them. Each added field can be removed again.
-3. Fill in the visible values. Prices use the selected currency.
-4. Check the preview and click **Copy offer**. Pressing Enter does the same thing.
+Select **Edit templates** to change:
 
-## Change packages and messages
+- template titles, package names, messages, and saved campaign text;
+- currencies;
+- broadband, TV, and streaming field names and choices;
+- the default template, currency, and service choices.
 
-Click **Edit templates** inside the app. The **Templates** tab contains the template list plus separate editors for the message and its saved `{broadband2}`, `{tv1}`, and `{tv2}` text. The **Fields, choices & defaults** tab contains the customizable field names, every dropdown choice, and all startup defaults.
+Changes are validated before they are saved. Settings stay in that browser's local storage and are not sent anywhere.
 
-Templates can use any of these optional fields:
+## Transfer or back up templates
 
-- `{services}` inserts only the optional fields added in the main window, joined with ` + `. This is the easiest choice for flexible Broadband, TV, and Streaming combinations.
-- `{broadband}` inserts the selected broadband speed.
-- `{broadband_price}` inserts the broadband price entered beside the broadband selector.
-- `{tv}` inserts the selected TV package.
-- `{streaming}` inserts the selected streaming package.
-- `{package}` inserts the package name.
-- `{price}` inserts the price entered in the main window.
-- `{date}` inserts the current date in `DD/MM/YYYY` format.
-- `{date+N}` inserts any whole number of days after the current date—for example, `{date+14}`.
-- `{date-N}` inserts any whole number of days before the current date—for example, `{date-14}`.
+Use **Export** to download one JSON file containing every template, choice, field name, and default. Use **Import** on another browser or device to load it. A JSON backup can also be dragged onto the page.
 
-For example, `We would like to offer you {services} for {price}.` works for Broadband, Broadband + TV, Broadband + Streaming, TV + Streaming, or all three. The user chooses the combination from the main window. Templates that use `{broadband}`, `{tv}`, or `{streaming}` directly initially add those fields, but each one can still be removed before copying.
+The **Transfer** tab in the editor additionally lets you copy the complete JSON as text or restore the configuration from `packages.json` bundled with the site.
 
-Field names such as Broadband and Streaming are editable, as are their choices and defaults. Their template fields—`{broadband}`, `{tv}`, and `{streaming}`—stay unchanged so renaming a visible field does not break saved templates. A removed optional field is not required. A message without any fields is copied exactly as written. If a template uses `{package}`, its package name cannot be blank. If it uses `{price}`, a total price must be entered before copying. If Broadband is added and the template uses `{broadband_price}`, a broadband price must be entered. The two prices are independent and both use the selected currency.
+Existing `packages.json` files from the Windows version are accepted, so current templates can be moved into the browser app without manual conversion.
 
-Use `{broadband2}`, `{tv1}`, and `{tv2}` in a message to insert text saved with that template. For example, `{tv}` can insert `tv mini` while `{tv1}` inserts its complete prewritten offer. These saved texts are edited only in **Edit templates**; they do not add text boxes or expose the wording as fields on the main window. Each one follows its matching optional service, so removing Broadband or TV also removes its saved text from the finished offer.
+## Template fields
 
-Date fields use the computer's current local date each time the preview or copied offer is created. When a template contains a date field, the main window also shows an optional **Date override (DD/MM/YYYY)** entry. Leave it blank to use today, or enter another date to make `{date}` and every offset calculate from that date. For example, an override of `02/09/2026` makes `{date+14}` become `16/09/2026` and `{date-14}` become `19/08/2026`.
+| Field | Result |
+| --- | --- |
+| `{services}` | Active service choices joined with ` + ` |
+| `{broadband}` | Selected broadband choice |
+| `{broadband_price}` | Broadband price plus the selected currency |
+| `{tv}` | Selected TV choice |
+| `{streaming}` | Selected streaming choice |
+| `{package}` | Package name saved with the template |
+| `{price}` | Offer price plus the selected currency |
+| `{broadband2}` | Saved broadband campaign text |
+| `{tv1}` | Saved TV offer text |
+| `{tv2}` | Saved TV campaign text |
+| `{date}` | Current date, or the entered override, as `DD.MM.YYYY` |
+| `{date+N}` | The date any whole number of days later, such as `{date+137}` |
+| `{date-N}` | The date any whole number of days earlier, such as `{date-14}` |
 
-Changes made in the packaged app are saved to `%LOCALAPPDATA%\OfferTemplates\packages.json`. That file can also be edited directly in a text editor if needed. Keep a copy of it to back up or move your templates to another computer.
+Use doubled braces for literal braces: `{{price}}` produces `{price}` instead of inserting a price. Date offsets are limited to 365,000 days as a safety bound.
 
-Currency choices are stored in `currencies`. Broadband, TV, and streaming names, choices, and defaults are stored in `variables`. `default_package` and `default_currency` control the initial template and currency. Currency text is placed after the entered price, so an entry such as `€/month` produces `19.90 €/month`.
+## Publish on GitHub Pages
 
-## Rebuild the executable
+This repository includes a manual **Publish GitHub Pages** workflow. It validates the application and publishes only the browser files.
 
-Install the build dependency with `python -m pip install -r requirements-build.txt`, then run `powershell -ExecutionPolicy Bypass -File packaging\build.ps1`. The finished file is created at `release\OfferTemplates.exe`.
+Before the first publication:
+
+1. Push the repository to GitHub.
+2. Open **Settings → Pages** and set **Source** to **GitHub Actions**. This is required once by GitHub.
+
+To publish:
+
+1. Open **Actions → Publish GitHub Pages**.
+2. Select **Run workflow**, then confirm with the green **Run workflow** button.
+
+The workflow checks the application before publishing it. GitHub shows the public address when the run finishes. Future publications use the same **Run workflow** button.
+
+## Run locally
+
+The app should be served over HTTP so the bundled JSON and clipboard APIs behave like they do on GitHub Pages. From the project folder, use either:
+
+```powershell
+python -m http.server 8000
+```
+
+or any other static file server, then open `http://localhost:8000`.
+
+## Validate changes
+
+Node.js is needed only for the automated checks, not for users of the app.
+
+```powershell
+node --test
+node --check core.js
+node --check app.js
+```
+
+The test suite covers template validation, optional services, campaign text, independent prices, date overrides and offsets, legacy JSON compatibility, and invalid configuration handling.
