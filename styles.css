@@ -774,32 +774,32 @@ select {
   line-height: 1.5;
 }
 
-.tv-choice-text-list {
+.choice-text-list {
   display: grid;
   margin-top: 13px;
 }
 
-.tv-choice-text-row {
+.choice-text-row {
   display: grid;
   gap: 12px;
   padding: 12px 0;
   border-top: 1px solid var(--border);
 }
 
-.tv-choice-text-row.single-output {
+.choice-text-row.single-output {
   grid-template-columns: minmax(130px, .35fr) minmax(0, 1fr);
 }
 
-.tv-choice-text-row.double-output {
+.choice-text-row.double-output {
   grid-template-columns: minmax(130px, .35fr) repeat(2, minmax(0, 1fr));
 }
 
-.tv-choice-text-row > strong {
+.choice-text-row > strong {
   margin-top: 25px;
   font-size: 12px;
 }
 
-.tv-choice-text-row textarea {
+.choice-text-row textarea {
   min-height: 62px;
   resize: vertical;
 }
@@ -1170,12 +1170,12 @@ body.modal-open {
     grid-column: auto;
   }
 
-  .tv-choice-text-row.single-output,
-  .tv-choice-text-row.double-output {
+  .choice-text-row.single-output,
+  .choice-text-row.double-output {
     grid-template-columns: 1fr;
   }
 
-  .tv-choice-text-row > strong {
+  .choice-text-row > strong {
     margin-top: 0;
   }
 

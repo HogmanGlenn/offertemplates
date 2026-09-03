@@ -8,8 +8,10 @@
   const VARIABLE_KEYS = ["broadband", "tv", "streaming"];
   const CAMPAIGN_FIELDS = {
     broadband2: { service: "broadband", label: "Broadband campaign text" },
-    tv1: { service: "tv", label: "TV offer text" },
-    tv2: { service: "tv", label: "TV campaign text" }
+    tv1: { service: "tv", label: "TV offer text", perChoice: true, legacyOutputs: "tv_outputs" },
+    tv2: { service: "tv", label: "TV campaign text", perChoice: true },
+    streaming1: { service: "streaming", label: "Streaming offer text", perChoice: true },
+    streaming2: { service: "streaming", label: "Streaming campaign text", perChoice: true }
   };
   const ALLOWED_FIELDS = new Set([
     "package", "price", "services", "broadband_price",
@@ -148,7 +150,7 @@
     return result;
   }
 
-  function validatePackages(value, tvOptions) {
+  function validatePackages(value, variables) {
     if (!Array.isArray(value) || value.length === 0) {
       throw new ConfigError("The configuration must contain at least one template.");
     }
@@ -177,20 +179,21 @@
         }
         if (typeof source[field] === "string" && source[field].trim()) item[field] = source[field].trim();
       });
-      ["tv1", "tv2"].forEach((field) => {
+      Object.entries(CAMPAIGN_FIELDS).forEach(([field, details]) => {
+        if (!details.perChoice) return;
         const outputField = `${field}_outputs`;
-        const sourceOutputs = source[outputField] === undefined && field === "tv1"
-          ? source.tv_outputs
+        const sourceOutputs = source[outputField] === undefined && details.legacyOutputs
+          ? source[details.legacyOutputs]
           : source[outputField];
         if (sourceOutputs !== undefined && (!sourceOutputs || typeof sourceOutputs !== "object" || Array.isArray(sourceOutputs))) {
-          throw new ConfigError(`Template ${index + 1} has invalid ${CAMPAIGN_FIELDS[field].label.toLowerCase()} by TV choice.`);
+          throw new ConfigError(`Template ${index + 1} has invalid ${details.label.toLowerCase()} by ${details.service} choice.`);
         }
         const outputs = {};
-        (tvOptions || []).forEach((choice) => {
+        variables[details.service].options.forEach((choice) => {
           let output = item[field] || "";
           if (sourceOutputs && Object.prototype.hasOwnProperty.call(sourceOutputs, choice)) {
             if (typeof sourceOutputs[choice] !== "string") {
-              throw new ConfigError(`The ${CAMPAIGN_FIELDS[field].label.toLowerCase()} for "${choice}" must be text.`);
+              throw new ConfigError(`The ${details.label.toLowerCase()} for "${choice}" must be text.`);
             }
             output = sourceOutputs[choice].trim();
           }
@@ -226,9 +229,9 @@
       }
       Object.entries(CAMPAIGN_FIELDS).forEach(([field, details]) => {
         if (!fields.has(field)) return;
-        if (details.service === "tv") {
+        if (details.perChoice) {
           const outputs = item[`${field}_outputs`] || {};
-          const missingChoice = (tvOptions || []).find((choice) => !outputs[choice]);
+          const missingChoice = variables[details.service].options.find((choice) => !outputs[choice]);
           if (missingChoice) {
             throw new ConfigError(`The template for "${item.title}" uses {${field}}, so add ${details.label.toLowerCase()} for "${missingChoice}".`);
           }
@@ -250,7 +253,7 @@
       "Currency"
     );
     const variables = validateVariables(value.variables === undefined ? clone(DEFAULT_VARIABLES) : value.variables);
-    const packages = validatePackages(value.packages, variables.tv.options);
+    const packages = validatePackages(value.packages, variables);
     const defaultPackage = value.default_package === undefined ? packages[0].title : value.default_package;
     const defaultCurrency = value.default_currency === undefined ? currencies[0] : value.default_currency;
     if (!packages.some((item) => item.title === defaultPackage)) {

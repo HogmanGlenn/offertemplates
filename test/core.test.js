@@ -12,7 +12,7 @@ function config(overrides = {}) {
     variables: {
       broadband: { label: "Broadband", options: ["1000/1000", "500/500"], default: "1000/1000" },
       tv: { label: "TV package", options: ["TV Mini", "TV Max"], default: "TV Mini" },
-      streaming: { label: "Streaming", options: ["Streaming Plus"], default: "Streaming Plus" }
+      streaming: { label: "Streaming", options: ["Streaming Mini", "Streaming Max"], default: "Streaming Mini" }
     },
     packages: [{
       title: "Flexible",
@@ -41,7 +41,7 @@ test("template editor exposes every supported field", () => {
   const buttons = new Set([...html.matchAll(/data-token="([^"]+)"/g)].map((match) => match[1]));
   [
     "{services}", "{broadband}", "{broadband_price}", "{broadband2}",
-    "{tv}", "{tv1}", "{tv2}", "{streaming}", "{package}", "{price}",
+    "{tv}", "{tv1}", "{tv2}", "{streaming}", "{streaming1}", "{streaming2}", "{package}", "{price}",
     "{date}"
   ].forEach((field) => assert.ok(buttons.has(field), `Missing insert button for ${field}`));
   assert.match(html, /id="date-offset-tool" hidden/);
@@ -52,6 +52,8 @@ test("template editor exposes every supported field", () => {
   assert.match(html, /id="open-field-values"/);
   assert.match(html, /id="tv-choice-text-settings"[^>]*hidden/);
   assert.match(html, /id="tv-choice-text-list"/);
+  assert.match(html, /id="streaming-choice-text-settings"[^>]*hidden/);
+  assert.match(html, /id="streaming-choice-text-list"/);
 });
 
 test("loads older configuration files without variables", () => {
@@ -69,10 +71,54 @@ test("joins only active services and formats the price", () => {
   const result = Core.renderOffer(item, {
     price: "29.90",
     currency: "€/month",
-    selections: { broadband: "1000/1000", tv: "TV Mini", streaming: "Streaming Plus" },
+    selections: { broadband: "1000/1000", tv: "TV Mini", streaming: "Streaming Mini" },
     activeVariables: new Set(["broadband", "streaming"])
   });
-  assert.equal(result, "Offer 1000/1000 + Streaming Plus for 29.90 €/month.");
+  assert.equal(result, "Offer 1000/1000 + Streaming Mini for 29.90 €/month.");
+});
+
+test("updates streaming, streaming1, and streaming2 from the same dropdown choice", () => {
+  const item = {
+    title: "Streaming offer",
+    package: "",
+    template: "{streaming}: {streaming1} {streaming2}",
+    streaming1_outputs: {
+      "Streaming Mini": "Mini offer for 5.90 €/month.",
+      "Streaming Max": "Max offer for 12.90 €/month."
+    },
+    streaming2_outputs: {
+      "Streaming Mini": "Mini campaign.",
+      "Streaming Max": "Max campaign."
+    }
+  };
+  assert.equal(Core.renderOffer(item, {
+    selections: { streaming: "Streaming Mini" },
+    activeVariables: ["streaming"]
+  }), "Streaming Mini: Mini offer for 5.90 €/month. Mini campaign.");
+  assert.equal(Core.renderOffer(item, {
+    selections: { streaming: "Streaming Max" },
+    activeVariables: ["streaming"]
+  }), "Streaming Max: Max offer for 12.90 €/month. Max campaign.");
+});
+
+test("migrates older shared streaming offer text", () => {
+  const value = config();
+  value.packages[0] = {
+    title: "Flexible",
+    package: "",
+    template: "{streaming}: {streaming1} {streaming2}",
+    streaming1: "Shared streaming offer",
+    streaming2: "Shared streaming campaign"
+  };
+  const result = Core.validateConfig(value).packages[0];
+  assert.deepEqual(result.streaming1_outputs, {
+    "Streaming Mini": "Shared streaming offer",
+    "Streaming Max": "Shared streaming offer"
+  });
+  assert.deepEqual(result.streaming2_outputs, {
+    "Streaming Mini": "Shared streaming campaign",
+    "Streaming Max": "Shared streaming campaign"
+  });
 });
 
 test("updates tv, tv1, and tv2 from the same dropdown choice", () => {
@@ -214,6 +260,15 @@ test("rejects duplicate titles, choices, and unknown fields", () => {
     tv1_outputs: { "TV Mini": "Mini offer" }
   };
   assert.throws(() => Core.validateConfig(missingTvText), /tv offer text for "TV Max"/i);
+
+  const missingStreamingText = config();
+  missingStreamingText.packages[0] = {
+    title: "Flexible",
+    package: "",
+    template: "{streaming}: {streaming1}",
+    streaming1_outputs: { "Streaming Mini": "Mini offer" }
+  };
+  assert.throws(() => Core.validateConfig(missingStreamingText), /streaming offer text for "Streaming Max"/i);
 });
 
 test("requires values only when their active fields use them", () => {

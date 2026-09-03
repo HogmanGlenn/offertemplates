@@ -131,6 +131,8 @@
               <button type="button" data-token="{tv1}">{tv1}</button>
               <button type="button" data-token="{tv2}">{tv2}</button>
               <button type="button" data-token="{streaming}">{streaming}</button>
+              <button type="button" data-token="{streaming1}">{streaming1}</button>
+              <button type="button" data-token="{streaming2}">{streaming2}</button>
               <button type="button" data-token="{package}">{package}</button>
               <button type="button" data-token="{price}">{price}</button>
               <button type="button" data-token="{date}">{date}</button>
@@ -158,7 +160,14 @@
                 <strong id="tv-choice-text-title">TV text by package</strong>
                 <p><code>{tv}</code> uses the dropdown choice. <code>{tv1}</code> and <code>{tv2}</code> use the matching text from the same package below.</p>
               </div>
-              <div class="tv-choice-text-list" id="tv-choice-text-list"></div>
+              <div class="choice-text-list" id="tv-choice-text-list"></div>
+            </section>
+            <section class="choice-output-settings" id="streaming-choice-text-settings" aria-labelledby="streaming-choice-text-title" hidden>
+              <div class="choice-output-heading">
+                <strong id="streaming-choice-text-title">Streaming text by package</strong>
+                <p><code>{streaming}</code> uses the dropdown choice. <code>{streaming1}</code> and <code>{streaming2}</code> use the matching text from the same package below.</p>
+              </div>
+              <div class="choice-text-list" id="streaming-choice-text-list"></div>
             </section>
             <details class="campaign-details">
               <summary>Saved campaign text</summary>
@@ -257,6 +266,7 @@
           <p>Select <strong>Edit templates</strong> to add, duplicate, rename, or remove a template. Change the message in the template editor and use the Insert buttons to add fields. Select <strong>Save changes</strong> when you are finished.</p>
           <p>The package name is only added when the message contains <code>{package}</code>.</p>
           <p><code>{tv}</code> adds the selected TV package name. When a message contains <code>{tv1}</code> or <code>{tv2}</code>, set its matching text for every package under <strong>TV text by package</strong>.</p>
+          <p><code>{streaming}</code> adds the selected streaming package name. When a message contains <code>{streaming1}</code> or <code>{streaming2}</code>, set its matching text for every package under <strong>Streaming text by package</strong>.</p>
         </section>
 
         <section class="instruction-section" aria-labelledby="fields-title-help">
@@ -267,6 +277,8 @@
             <div><dt><code>{broadband_price}</code></dt><dd>Adds the broadband price and currency.</dd></div>
             <div><dt><code>{tv}</code></dt><dd>Adds the selected TV package name.</dd></div>
             <div><dt><code>{streaming}</code></dt><dd>Adds the selected streaming option.</dd></div>
+            <div><dt><code>{streaming1}</code></dt><dd>Adds the streaming offer text saved for the selected package.</dd></div>
+            <div><dt><code>{streaming2}</code></dt><dd>Adds the streaming campaign text saved for the selected package.</dd></div>
             <div><dt><code>{package}</code></dt><dd>Adds the package name saved with the template.</dd></div>
             <div><dt><code>{price}</code></dt><dd>Adds the main price and currency.</dd></div>
             <div><dt><code>{broadband2}</code></dt><dd>Adds the saved broadband campaign text.</dd></div>

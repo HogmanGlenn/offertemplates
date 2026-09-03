@@ -16,6 +16,7 @@ Select **Edit templates** to change:
 - currencies;
 - broadband, TV, and streaming field names and choices;
 - different `{tv1}` and `{tv2}` text for each TV package;
+- different `{streaming1}` and `{streaming2}` text for each streaming package;
 - the default template, currency, and service choices.
 
 Changes are validated before they are saved. Settings stay in that browser's local storage and are not sent anywhere.
@@ -37,6 +38,8 @@ Existing `packages.json` files from the Windows version are accepted, so current
 | `{broadband_price}` | Broadband price plus the selected currency |
 | `{tv}` | Selected TV package name |
 | `{streaming}` | Selected streaming choice |
+| `{streaming1}` | Streaming offer text saved for the selected package |
+| `{streaming2}` | Streaming campaign text saved for the selected package |
 | `{package}` | Package name saved with the template |
 | `{price}` | Offer price plus the selected currency |
 | `{broadband2}` | Saved broadband campaign text |
@@ -49,6 +52,8 @@ Existing `packages.json` files from the Windows version are accepted, so current
 Use doubled braces for literal braces: `{{price}}` produces `{price}` instead of inserting a price. Date offsets are limited to 365,000 days as a safety bound.
 
 `{tv}` always uses the name selected in the TV dropdown. When a template contains `{tv1}` or `{tv2}`, its editor shows **TV text by package**. Enter the matching offer or campaign text for each TV package. Changing the TV dropdown then updates `{tv}`, `{tv1}`, and `{tv2}` together.
+
+`{streaming}` always uses the name selected in the Streaming dropdown. When a template contains `{streaming1}` or `{streaming2}`, its editor shows **Streaming text by package**. Enter the matching offer or campaign text for each streaming package. Changing the Streaming dropdown then updates `{streaming}`, `{streaming1}`, and `{streaming2}` together.
 
 ## Publish on GitHub Pages
 

@@ -37,7 +37,7 @@
       "edit-title", "edit-package", "edit-message", "edit-broadband2",
       "field-settings", "currency-settings", "default-template", "default-currency", "copy-settings", "reset-settings",
       "open-instructions", "instructions-modal", "close-instructions", "done-instructions", "open-field-values", "services-help",
-      "tv-choice-text-settings", "tv-choice-text-list",
+      "tv-choice-text-settings", "tv-choice-text-list", "streaming-choice-text-settings", "streaming-choice-text-list",
       "date-offset-tool", "date-offset-days", "insert-date-plus", "insert-date-minus", "date-offset-status",
       "import-file", "drop-overlay"
     ].forEach((id) => { elements[id] = byId(id); });
@@ -431,17 +431,19 @@
     updateTemplateFieldHelp();
   }
 
-  function renderTvChoiceTexts(fields) {
+  function renderChoiceTexts(service, fields, sectionId, listId) {
     const item = currentDraftTemplate();
-    const section = elements["tv-choice-text-settings"];
-    const list = elements["tv-choice-text-list"];
-    const outputFields = ["tv1", "tv2"].filter((field) => fields.has(field));
+    const section = elements[sectionId];
+    const list = elements[listId];
+    const outputFields = Object.entries(Core.CAMPAIGN_FIELDS)
+      .filter(([field, details]) => details.service === service && details.perChoice && fields.has(field))
+      .map(([field]) => field);
     section.hidden = outputFields.length === 0;
     list.replaceChildren();
     if (!outputFields.length) return;
-    state.draft.variables.tv.options.forEach((choice) => {
+    state.draft.variables[service].options.forEach((choice) => {
       const row = document.createElement("article");
-      row.className = `tv-choice-text-row ${outputFields.length === 1 ? "single-output" : "double-output"}`;
+      row.className = `choice-text-row ${outputFields.length === 1 ? "single-output" : "double-output"}`;
       const title = document.createElement("strong");
       title.textContent = choice;
       row.append(title);
@@ -467,12 +469,15 @@
     try {
       const fields = Core.templateFields(elements["edit-message"].value);
       elements["services-help"].hidden = !fields.has("services");
-      renderTvChoiceTexts(fields);
+      renderChoiceTexts("tv", fields, "tv-choice-text-settings", "tv-choice-text-list");
+      renderChoiceTexts("streaming", fields, "streaming-choice-text-settings", "streaming-choice-text-list");
       elements["date-offset-tool"].hidden = ![...fields].some((field) => /^date(?:[+-]\d+)?$/.test(field));
     } catch (_error) {
       elements["services-help"].hidden = true;
       elements["tv-choice-text-settings"].hidden = true;
       elements["tv-choice-text-list"].replaceChildren();
+      elements["streaming-choice-text-settings"].hidden = true;
+      elements["streaming-choice-text-list"].replaceChildren();
       elements["date-offset-tool"].hidden = true;
     }
   }
@@ -602,9 +607,12 @@
       choicesArea.addEventListener("input", () => {
         const previousOptions = [...variable.options];
         variable.options = linesFromTextarea(choicesArea.value);
-        if (key === "tv") {
+        const choiceOutputFields = Object.entries(Core.CAMPAIGN_FIELDS)
+          .filter(([, details]) => details.service === key && details.perChoice)
+          .map(([field]) => `${field}_outputs`);
+        if (choiceOutputFields.length) {
           state.draft.packages.forEach((item) => {
-            ["tv1_outputs", "tv2_outputs"].forEach((outputField) => {
+            choiceOutputFields.forEach((outputField) => {
               if (!item[outputField]) return;
               const previousOutputs = item[outputField];
               const nextOutputs = {};
@@ -622,7 +630,7 @@
               else delete item[outputField];
             });
           });
-          if (!elements["tv-choice-text-settings"].hidden) updateTemplateFieldHelp();
+          updateTemplateFieldHelp();
         }
         const previous = variable.default;
         defaultSelect.replaceChildren();
