@@ -196,11 +196,11 @@ test("supports package, service, and independent broadband price fields", () => 
   const result = Core.renderOffer(item, {
     price: "39.90",
     broadbandPrice: "19.90",
-    currency: "€/month",
+    currency: "kr",
     selections: { broadband: "500/500" },
     activeVariables: ["broadband"]
   });
-  assert.equal(result, "Home bundle: 500/500 19.90 €/month; total 39.90 €/month");
+  assert.equal(result, "Home bundle: 500/500 19.90kr; total 39.90 kr");
 });
 
 test("omits campaign text when its service is removed", () => {

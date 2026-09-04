@@ -323,11 +323,11 @@
       throw new ConfigError("Enter a broadband price first.");
     }
 
-    const withCurrency = (value) => value && currency ? `${value} ${currency}` : value;
+    const withCurrency = (value, separator = " ") => value && currency ? `${value}${separator}${currency}` : value;
     const replacements = {
       package: packageName,
       price: withCurrency(price),
-      broadband_price: active.has("broadband") ? withCurrency(broadbandPrice) : "",
+      broadband_price: active.has("broadband") ? withCurrency(broadbandPrice, "") : "",
       services: VARIABLE_KEYS
         .filter((key) => active.has(key) && String(selections[key] || "").trim())
         .map((key) => String(selections[key]).trim())
